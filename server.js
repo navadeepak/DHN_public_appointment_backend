@@ -11,6 +11,11 @@ dotenv.config();
 const app = express();
 
 // Fixed CORS: Allow frontend origin + credentials for session cookies
+// const allowedOrigins = [
+//   "http://localhost:5175",
+//   "http://localhost:5174"
+// ];
+
 const allowedOrigins = [
   "https://dentalhealthnet.com",
   "https://dhnappointment.dentalhealthnet.com",
