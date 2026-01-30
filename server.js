@@ -11,12 +11,24 @@ dotenv.config();
 const app = express();
 
 // Fixed CORS: Allow frontend origin + credentials for session cookies
+const allowedOrigins = [
+  "http://localhost:5175",
+  "http://localhost:5174"
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Your Vite frontend port (confirm in browser address bar)
-  credentials: true, // **Key**: Allows cookies to be sent
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -1,12 +1,10 @@
-// src/controllers/auth.controller.js (Full Fixed Code - Matching Friend's Style, No Session, DB for OTP)
-import User from '../models/user.model.js';
-import nodemailer from 'nodemailer';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+import User from "../models/user.model.js";
+import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-// Transporter setup (like friend's code)
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -17,9 +15,10 @@ const transporter = nodemailer.createTransport({
 });
 
 // Generate OTP
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateOTP = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
 
-// Send Email (like friend's code, fixed template literal)
+// Send Email 
 const sendEmail = async (email, otp) => {
   const mailOptions = {
     from: "Dental Health Net",
@@ -38,7 +37,7 @@ const sendEmail = async (email, otp) => {
   }
 };
 
-// Register - Step 1: Send OTP (like friend's code - save OTP to DB)
+// Register - Step 1: Send OTP
 export const register = async (req, res) => {
   try {
     const { name, phno, email, address, password, confirmPassword } = req.body;
@@ -48,7 +47,9 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: "Passwords do not match" });
     }
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
     }
 
     // Email validation
@@ -60,7 +61,9 @@ export const register = async (req, res) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Email already registered. Please login." });
+      return res
+        .status(400)
+        .json({ message: "Email already registered. Please login." });
     }
 
     // Generate OTP and expiry
@@ -75,7 +78,7 @@ export const register = async (req, res) => {
       address,
       password, // Hashed in pre-save hook
       otp,
-      otpExpires
+      otpExpires,
     });
 
     // Save user
@@ -91,7 +94,7 @@ export const register = async (req, res) => {
   }
 };
 
-// Verify OTP (like friend's style - find user, check OTP in DB, set verified)
+// Verify OTP
 export const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -119,12 +122,16 @@ export const verifyOTP = async (req, res) => {
     await user.save();
 
     // Generate JWT
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'fallback-secret', { expiresIn: '7d' });
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || "fallback-secret",
+      { expiresIn: "7d" }
+    );
 
-    res.status(201).json({ 
-      message: "Registration successful", 
+    res.status(201).json({
+      message: "Registration successful",
       user: { id: user._id, name: user.name, email: user.email },
-      token 
+      token,
     });
   } catch (error) {
     console.error("VerifyOTP Error:", error);
@@ -132,18 +139,20 @@ export const verifyOTP = async (req, res) => {
   }
 };
 
-// Login (async function)
+// Login
 export const login = async (req, res) => {
   try {
     const { credential, password } = req.body;
 
     // Find user by email or phone
     const user = await User.findOne({
-      $or: [{ email: credential }, { phno: credential }]
+      $or: [{ email: credential }, { phno: credential }],
     });
 
     if (!user || !user.isVerified) {
-      return res.status(401).json({ message: "Invalid credentials or unverified account" });
+      return res
+        .status(401)
+        .json({ message: "Invalid credentials or unverified account" });
     }
 
     // Compare password
@@ -153,12 +162,21 @@ export const login = async (req, res) => {
     }
 
     // Generate token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'fallback-secret', { expiresIn: '7d' });
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.SESSION_SECRET || "fallback-secret",
+      { expiresIn: "7d" }
+    );
 
-    res.status(200).json({ 
-      message: "Login successful", 
-      user: { id: user._id, name: user.name, email: user.email },
-      token 
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phno: user.phno,
+      },
+      token,
     });
   } catch (error) {
     console.error("Login Error:", error);
