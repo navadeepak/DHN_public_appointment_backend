@@ -12,8 +12,9 @@ const app = express();
 
 // Fixed CORS: Allow frontend origin + credentials for session cookies
 const allowedOrigins = [
-  "http://localhost:5175",
-  "http://localhost:5174"
+  "https://dentalhealthnet.com",
+  "https://dhnappointment.dentalhealthnet.com",
+  "https://admin.dentalhealthnet.com",
 ];
 
 app.use(cors({
