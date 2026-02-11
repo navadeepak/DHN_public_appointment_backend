@@ -101,7 +101,7 @@ export const rejectAppointment = async (req, res) => {
 export const rescheduleAppointment = async (req, res) => {
   try {
     const { id } = req.params; // appointment _id
-    const { appointmentDate, selectedSlot } = req.body;
+    const { appointmentDate, selectedSlot, rescheduledBy } = req.body;
 
     if (!appointmentDate || !selectedSlot) {
       return res.status(400).json({
@@ -110,22 +110,33 @@ export const rescheduleAppointment = async (req, res) => {
       });
     }
 
-    const appointment = await userAppointmentModel.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          appointmentDate,
-          selectedSlot,
-          status: "pending", // usually reset to pending after reschedule
-          // Optional: you can add rescheduledAt: new Date(),
-        },
-      },
-      { new: true, runValidators: true }
-    );
+    const appointment = await userAppointmentModel.findById(id);
 
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found" });
     }
+
+    // Push to history
+    appointment.reschedules.push({
+      previousDate: appointment.appointmentDate,
+      previousSlot: appointment.selectedSlot,
+      newDate: appointmentDate,
+      newSlot: selectedSlot,
+      rescheduledBy: rescheduledBy || "Patient", // Track who rescheduled
+    });
+
+    // Update appointment details
+    appointment.appointmentDate = appointmentDate;
+    appointment.selectedSlot = selectedSlot;
+
+    // Set status based on who rescheduled
+    if (rescheduledBy === "Clinic") {
+      appointment.status = "doctor_rescheduled";
+    } else {
+      appointment.status = "pending";
+    }
+
+    await appointment.save();
 
     return res.status(200).json({
       message: "Appointment rescheduled successfully!",
@@ -135,6 +146,36 @@ export const rescheduleAppointment = async (req, res) => {
     console.error(error);
     return res.status(500).json({
       message: "Failed to reschedule appointment",
+      error: error.message,
+    });
+  }
+};
+
+// ────────────────────────────────────────────────
+// 5. Cancel appointment (User)
+// ────────────────────────────────────────────────
+export const cancelAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const appointment = await userAppointmentModel.findByIdAndUpdate(
+      id,
+      { $set: { status: "cancelled" } },
+      { new: true, runValidators: true }
+    );
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    return res.status(200).json({
+      message: "Appointment cancelled successfully!",
+      data: appointment,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Failed to cancel appointment",
       error: error.message,
     });
   }

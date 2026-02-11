@@ -6,38 +6,37 @@ import routes from "./src/routers/routes.js";
 import session from "express-session";
 import authRoutes from "./src/routers/auth.js";
 
+
 dotenv.config();
 
 const app = express();
 
-// Fixed CORS: Allow frontend origin + credentials for session cookies
-// const allowedOrigins = [
-//   "http://localhost:5175",
-//   "http://localhost:5174"
-// ];
+const allowedOrigins = [
+  "https://dentalhealthnet.com",
+  "https://dhnappointment.dentalhealthnet.com",
+  "https://admin.dentalhealthnet.com",
+  "https://dependencyfordhn.dentalhealthnet.com",
+  "https://sai.dentalhealthnet.com",
+  "https://sekar.dentalhealthnet.com",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://localhost:5177",
+  "http://localhost:5178",
+  "http://localhost:5180",
+];
 
-// const allowedOrigins = [
-//   "https://dentalhealthnet.com",
-//   "https://dhnappointment.dentalhealthnet.com",
-//   "https://admin.dentalhealthnet.com",
-// ];
-
-// app.use(cors({
-//   origin: function (origin, callback) {
-//     if (!origin || allowedOrigins.includes(origin)) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error("Not allowed by CORS"));
-//     }
-//   },
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization']
-// }));
 
 app.use(
   cors({
-    origin: true, // 🔥 reflect request origin
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

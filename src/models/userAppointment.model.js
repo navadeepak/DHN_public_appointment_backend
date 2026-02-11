@@ -15,6 +15,19 @@ const userAppointmentSchema = mongoose.Schema(
     clinicLocation: { type: String, require: true },
     clinicNumber: { type: String },
     status: { type: String, default: "pending" },
+    reschedules: {
+      type: [
+        {
+          previousDate: String,
+          previousSlot: String,
+          newDate: String,
+          newSlot: String,
+          rescheduledBy: String,
+          timestamp: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamp: true }
 );
